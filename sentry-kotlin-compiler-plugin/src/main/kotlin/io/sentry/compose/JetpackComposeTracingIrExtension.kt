@@ -87,9 +87,9 @@ class JetpackComposeTracingIrExtension(
         }
         val modifierThen = modifierThenRefs.single()
 
-        val sentryModifierTagFunction = FqName("io.sentry.compose")
-            .classId("SentryModifier")
-            .callableId("sentryTag")
+        val sentryModifierTagFunction = FqName("io.test.compose")
+            .classId("TestTagModifier")
+            .callableId("testTag")
 
         val sentryModifierTagFunctionRefs = pluginContext
             .referenceFunctions(sentryModifierTagFunction)
@@ -137,7 +137,7 @@ class JetpackComposeTracingIrExtension(
                     .startsWith("androidx")
 
                 val isSentryPackage = declaration.getPackageFragment().fqName.asString()
-                    .startsWith("io.sentry.compose")
+                    .startsWith("io.test.compose")
 
                 var modifierAdded = false
                 if (isComposable && !isAndroidXPackage && !isSentryPackage) {

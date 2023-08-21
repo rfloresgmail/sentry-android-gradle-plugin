@@ -106,15 +106,15 @@ dependencies {
 }
 
 configure<JavaPluginExtension> {
-    sourceCompatibility = JavaVersion.VERSION_11
-    targetCompatibility = JavaVersion.VERSION_11
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
 }
 
 // We need to compile Groovy first and let Kotlin depend on it.
 // See https://docs.gradle.org/6.1-rc-1/release-notes.html#compilation-order
 tasks.withType<GroovyCompile>().configureEach {
-    sourceCompatibility = JavaVersion.VERSION_11.toString()
-    targetCompatibility = JavaVersion.VERSION_11.toString()
+    sourceCompatibility = JavaVersion.VERSION_17.toString()
+    targetCompatibility = JavaVersion.VERSION_17.toString()
 
     // we don't need the groovy compile task for compatibility source sets
     val ignoreTask = name.contains("agp", ignoreCase = true)
@@ -130,7 +130,7 @@ tasks.withType<KotlinCompile>().configureEach {
     }
 
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_11.toString()
+        jvmTarget = JavaVersion.VERSION_17.toString()
         freeCompilerArgs = listOf("-Xopt-in=kotlin.RequiresOptIn", "-Xjvm-default=enable")
         languageVersion = "1.4"
         apiVersion = "1.4"

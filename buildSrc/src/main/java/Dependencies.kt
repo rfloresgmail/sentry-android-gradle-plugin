@@ -69,11 +69,11 @@ object Samples {
         const val lifecycle = "androidx.lifecycle:lifecycle-runtime-ktx:2.2.0"
         const val appcompat = "androidx.appcompat:appcompat:1.2.0"
 
-        const val composeRuntime = "androidx.compose.runtime:runtime:1.1.1"
+        const val composeRuntime = "androidx.compose.runtime:runtime:1.3.0"
         const val composeNavigation = "androidx.navigation:navigation-compose:2.5.2"
         const val composeActivity = "androidx.activity:activity-compose:1.4.0"
-        const val composeFoundation = "androidx.compose.foundation:foundation:1.2.1"
-        const val composeFoundationLayout = "androidx.compose.foundation:foundation-layout:1.2.1"
+        const val composeFoundation = "androidx.compose.foundation:foundation:1.3.0"
+        const val composeFoundationLayout = "androidx.compose.foundation:foundation-layout:1.3.0"
     }
 
     object Coroutines {

@@ -41,7 +41,7 @@ class ComposeInstallStrategyTest {
 
         fun getSut(
             installCompose: Boolean = true,
-            composeVersion: String = "1.0.0"
+            composeVersion: String = "1.4.0"
         ): ComposeInstallStrategy {
             val id = mock<ModuleVersionIdentifier> {
                 whenever(it.version).doReturn(composeVersion)
@@ -73,7 +73,7 @@ class ComposeInstallStrategyTest {
 
     @Test
     fun `when sentry version is unsupported logs a message and does nothing`() {
-        val sut = fixture.getSut(composeVersion = "0.9.0")
+        val sut = fixture.getSut(composeVersion = "1.3.0")
         sut.execute(fixture.metadataContext)
 
         assertTrue {

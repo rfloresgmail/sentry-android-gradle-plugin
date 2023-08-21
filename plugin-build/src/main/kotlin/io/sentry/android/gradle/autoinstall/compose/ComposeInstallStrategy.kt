@@ -24,10 +24,10 @@ abstract class ComposeInstallStrategy : AbstractInstallStrategy {
     override val shouldInstallModule: Boolean get() = AutoInstallState.getInstance().installCompose
 
     override val minSupportedSentryVersion: SemVer
-        get() = SemVer(6, 7, 0)
+        get() = SemVer(6, 18, 0)
 
     override val minSupportedThirdPartyVersion: SemVer
-        get() = SemVer(1, 0, 0)
+        get() = SemVer(1, 3, 0)
 
     companion object Registrar : InstallStrategyRegistrar {
 

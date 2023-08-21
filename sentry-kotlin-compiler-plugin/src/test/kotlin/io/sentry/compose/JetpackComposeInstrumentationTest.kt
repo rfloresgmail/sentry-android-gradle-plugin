@@ -17,27 +17,29 @@ class JetpackComposeInstrumentationTest {
         // A Fake modifier, which provides hooks so we can not only verify that our code compiles,
         // but also execute it and ensure our tags are set correctly.
         private val fakeSentryModifier = SourceFile.kotlin(
-            name = "SentryModifier.kt",
+            name = "TestTagModifier.kt",
             contents =
             // language=kotlin
             """
-            package io.sentry.compose
+            package io.test.compose
 
             import androidx.compose.ui.Modifier
             import androidx.compose.ui.semantics.SemanticsPropertyKey
             import androidx.compose.ui.semantics.semantics
+            import androidx.compose.ui.ExperimentalComposeUiApi
+//            import androidx.compose.ui.semantics.testTagsAsResourceId
 
             // Based on TestTag
             // https://cs.android.com/androidx/platform/frameworks/support/+/androidx-main:compose/ui/ui/src/commonMain/kotlin/androidx/compose/ui/semantics/SemanticsProperties.kt;l=166;drc=76bc6975d1b520c545b6f8786ff5c9f0bc22bd1f
-            private val SentryTag = SemanticsPropertyKey<String>(
-                name = "SentryTag",
+            private val TestTag = SemanticsPropertyKey<String>(
+                name = "TestTag",
                 mergePolicy = { parentValue, _ ->
                     // Never merge SentryTags, to avoid leaking internal test tags to parents.
                     parentValue
                 }
             )
 
-            object SentryModifier {
+            object TestTagModifier {
 
                 private var callback: (tag: String) -> Unit = {}
 
@@ -46,12 +48,14 @@ class JetpackComposeInstrumentationTest {
                     callback = c
                 }
 
+                @OptIn(ExperimentalComposeUiApi::class)
                 @JvmStatic
-                public fun Modifier.sentryTag(tag: String): Modifier {
+                public fun Modifier.testTag(tag: String): Modifier {
                     callback(tag)
                     return semantics(
                         properties = {
-                            this[SentryTag] = tag
+                            //testTagsAsResourceId = true
+                            this[TestTag] = tag
                         }
                     )
                 }
@@ -61,7 +65,7 @@ class JetpackComposeInstrumentationTest {
         private val fakeComposeFunction = SourceFile.kotlin(
             name = "ComposableFunction.kt",
             contents = """
-            package io.sentry.compose
+            package io.test.compose
             import androidx.compose.ui.Modifier
             import androidx.compose.ui.platform.testTag
             import androidx.compose.runtime.Composable
@@ -116,7 +120,7 @@ class JetpackComposeInstrumentationTest {
             val tags = mutableListOf<String>()
             try {
                 val fakeModifierClass =
-                    compilation.classLoader.loadClass("io.sentry.compose.SentryModifier")
+                    compilation.classLoader.loadClass("io.test.compose.TestTagModifier")
                 val setCallbackMethod =
                     fakeModifierClass.getMethod("setCallback", Function1::class.java)
                 setCallbackMethod.invoke(fakeModifierClass, { tag: String ->
@@ -145,16 +149,16 @@ class JetpackComposeInstrumentationTest {
             contents = """
             package io.sentry.samples
             import androidx.compose.runtime.Composable
-            import io.sentry.compose.ComposableFunction
+            import io.test.compose.ComposableFunction
 
             class Example {
                 @Composable
-                fun NoModifier() {
+                fun NoMoodifier() {
                     // expected:
-                    // val sentryModifier = Modifier.sentryTag("NoModifier")
+                    // val sentryModifier = Modifier.sentryTag("NoMoodifier")
                     // ComposableFunction(modifier = sentryModifier, text = ..
                     ComposableFunction(
-                        text = "No Modifier Argument"
+                        text = "No Moodifier Argument"
                     )
                 }
             }
@@ -166,9 +170,9 @@ class JetpackComposeInstrumentationTest {
         val compilation = fixture.compileFile(kotlinSource)
         assert(compilation.exitCode == KotlinCompilation.ExitCode.OK)
 
-        val tags = fixture.execute(compilation, method = "NoModifier")
+        val tags = fixture.execute(compilation, method = "NoMoodifier")
         assertEquals(1, tags.size)
-        assertEquals("NoModifier", tags[0])
+        assertEquals("NoMoodifier", tags[0])
     }
 
     @Test
@@ -183,7 +187,7 @@ class JetpackComposeInstrumentationTest {
             import androidx.compose.ui.unit.dp
             import androidx.compose.runtime.Composable
             import androidx.compose.ui.Modifier
-            import io.sentry.compose.ComposableFunction
+            import io.test.compose.ComposableFunction
 
             class Example {
                 @Composable
@@ -223,7 +227,7 @@ class JetpackComposeInstrumentationTest {
             import androidx.compose.ui.unit.dp
             import androidx.compose.runtime.Composable
             import androidx.compose.ui.Modifier
-            import io.sentry.compose.ComposableFunction
+            import io.test.compose.ComposableFunction
 
             class Example {
                 @Composable
@@ -267,7 +271,7 @@ class JetpackComposeInstrumentationTest {
             package io.sentry.samples
 
             import androidx.compose.runtime.Composable
-            import io.sentry.compose.ComposableFunction
+            import io.test.compose.ComposableFunction
 
             class Example {
                 @Composable
@@ -293,6 +297,7 @@ class JetpackComposeInstrumentationTest {
         // emit a compiler warning
         assert(
             compilation.messages.contains("io.sentry.compose.Modifier.sentryTag() not found")
+//            compilation.messages.contains("testTag() not found")
         )
 
         // and still execute fine
@@ -302,5 +307,56 @@ class JetpackComposeInstrumentationTest {
             method = "Example"
         )
         assertEquals(0, tags.size)
+    }
+
+    @Test
+    fun `When multiple composables are present, inject sentry modifier`() {
+        val kotlinSource = SourceFile.kotlin(
+            name = "Example.kt",
+            contents = """
+            package io.sentry.samples
+            import androidx.compose.runtime.Composable
+            import io.test.compose.ComposableFunction
+            import androidx.compose.material.Text
+
+            class Example {
+                @Composable
+                fun NoMoodifier() {
+                    // expected:
+                    // val sentryModifier = Modifier.sentryTag("NoMoodifier")
+                    // ComposableFunction(modifier = sentryModifier, text = ..
+                    ComposableFunction(
+                        text = "No Moodifier Argument first"
+                    )
+                    ComposableFunction(
+                        text = "No Moodifier Argument second"
+                    )
+                }
+                @Composable
+                fun SecondFunction() {
+                    // expected:
+                    // val sentryModifier = Modifier.sentryTag("NoMoodifier")
+                    // ComposableFunction(modifier = sentryModifier, text = ..
+                    ComposableFunction(
+                        text = "second fun"
+                    )
+                }
+
+            }
+            """.trimIndent()
+        )
+
+        val fixture = Fixture()
+
+        val compilation = fixture.compileFile(kotlinSource)
+        assert(compilation.exitCode == KotlinCompilation.ExitCode.OK)
+
+        val tags = fixture.execute(compilation, method = "NoMoodifier")
+        assertEquals(1, tags.size)
+        assertEquals("NoMoodifier", tags[0])
+
+        val tags2 = fixture.execute(compilation, method = "SecondFunction")
+        assertEquals(1, tags2.size)
+        assertEquals("SecondFunction", tags2[0])
     }
 }
