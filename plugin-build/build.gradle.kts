@@ -37,6 +37,7 @@ val testImplementationAar by configurations.getting // this converts .aar into .
 
 val agp70: SourceSet by sourceSets.creating
 val agp74: SourceSet by sourceSets.creating
+val agp80: SourceSet by sourceSets.creating
 
 val shade: Configuration by configurations.creating {
     isCanBeConsumed = false
@@ -54,10 +55,15 @@ dependencies {
     agp74.compileOnlyConfigurationName(Libs.agp("7.4.0"))
     agp74.compileOnlyConfigurationName(project(":common"))
 
+    agp80.compileOnlyConfigurationName(Libs.GRADLE_API)
+    agp80.compileOnlyConfigurationName(Libs.agp("8.0.0"))
+    agp80.compileOnlyConfigurationName(project(":common"))
+
     compileOnly(Libs.GRADLE_API)
     compileOnly(Libs.AGP)
     compileOnly(agp70.output)
     compileOnly(agp74.output)
+    compileOnly(agp80.output)
     compileOnly(Libs.PROGUARD)
 
     compileOnly(Libs.ASM)
